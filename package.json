@@ -7,7 +7,8 @@
     "build": "tsc",
     "start": "ts-node src/index.ts",
     "dev": "ts-node src/index.ts",
-    "test": "ts-node src/test.ts"
+    "test": "ts-node src/test.ts",
+    "generate-prices": "ts-node src/scripts/generateEthPrices.ts"
   },
   "keywords": ["crypto", "wallet", "nansen", "coingecko", "blockchain"],
   "author": "",

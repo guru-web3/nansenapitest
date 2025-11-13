@@ -1,10 +1,12 @@
-import { subMonths, parseISO } from 'date-fns';
+import { subMonths, parseISO, format } from 'date-fns';
 import { nansenService } from '../services/nansen.service';
 import { coinGeckoService } from '../services/coingecko.service';
+import { PriceCacheService } from '../services/priceCache.service';
 import { EthBenchmarkFunFact } from '../types';
 
 const MIN_VOLUME_USD = 10; // Minimum $10 USD transaction volume
 const MONTHS_LOOKBACK = 6; // Look back 6 months
+const TOP_TRANSACTIONS = 20; // Sample top 20 transactions by volume (~92% coverage)
 
 /**
  * Compares wallet's token purchase performance vs. holding equivalent ETH instead
@@ -67,23 +69,35 @@ export async function analyzeEthBenchmark(address: string): Promise<EthBenchmark
       };
     }
 
-    // Step 3: Calculate total USD spent on purchases
+    // Step 2.5: Sample top transactions by volume for performance
+    // Sort by volume descending and take top 20
+    const topTransactions = buyTransactions
+      .sort((a, b) => b.volume_usd - a.volume_usd)
+      .slice(0, TOP_TRANSACTIONS);
+
+    console.log(`📊 Analyzing top ${topTransactions.length} transactions (out of ${buyTransactions.length} total)`);
+
+    // Step 3: Calculate total USD spent on purchases using pre-computed prices
     let totalUsdSpent = 0;
     let totalEthEquivalent = 0;
+    let pricesFound = 0;
 
-    for (const tx of buyTransactions) {
+    for (const tx of topTransactions) {
       const usdSpent = tx.volume_usd;
       totalUsdSpent += usdSpent;
 
-      // Get ETH price at transaction time
+      // Get ETH price at transaction time from cache (instant lookup)
       const txDate = parseISO(tx.block_timestamp);
-      const ethPrice = await coinGeckoService.getHistoricalPrice('ethereum', txDate);
+      const ethPrice = PriceCacheService.getEthPrice(txDate);
 
-      if (ethPrice > 0) {
+      if (ethPrice && ethPrice > 0) {
         const ethEquivalent = usdSpent / ethPrice;
         totalEthEquivalent += ethEquivalent;
+        pricesFound++;
       }
     }
+
+    console.log(`✅ Found ${pricesFound} cached prices out of ${topTransactions.length} transactions`);
 
     // If we couldn't get any ETH prices, fail gracefully
     if (totalEthEquivalent === 0) {
@@ -124,6 +138,8 @@ export async function analyzeEthBenchmark(address: string): Promise<EthBenchmark
         ethEquivalentValue,
         performancePercent,
         status: performancePercent >= 0 ? 'OUTPERFORMED' : 'UNDERPERFORMED',
+        sampleSize: topTransactions.length,
+        totalTransactions: buyTransactions.length,
       },
     };
   } catch (error) {

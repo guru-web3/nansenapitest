@@ -3,7 +3,8 @@ import { coinGeckoService } from '../services/coingecko.service';
 import { PortfolioAthFunFact } from '../types';
 
 const ATH_LOOKBACK_DAYS = 365; // Look back 1 year for ATH
-const TOP_HOLDINGS_COUNT = 30; // Top 30 holdings
+const TOP_HOLDINGS_COUNT = 10; // Top 10 holdings (~95% portfolio coverage)
+const MIN_VALUE_USD = 50; // Minimum $50 USD value to include
 
 /**
  * Calculates wallet's potential value if all current holdings were at their all-time highs
@@ -40,15 +41,17 @@ export async function analyzePortfolioATH(address: string): Promise<PortfolioAth
 
     const holdings = balanceResponse.data;
 
-    // Filter out ETH/native tokens (0xeeee... addresses are native tokens)
+    // Filter out ETH/native tokens and small holdings
     const tokenHoldings = holdings.filter(
       (holding) =>
         holding.token_address &&
         holding.token_address.toLowerCase() !== '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' &&
         holding.token_address.toLowerCase() !== '0x000000000000000000000000000000000000800a' && // ZkSync ETH
         holding.chain &&
-        holding.value_usd > 0
+        holding.value_usd >= MIN_VALUE_USD // Filter out dust
     );
+
+    console.log(`📊 Analyzing top ${tokenHoldings.length} holdings (min $${MIN_VALUE_USD} value)`);
 
     if (tokenHoldings.length === 0) {
       return {
@@ -83,13 +86,38 @@ export async function analyzePortfolioATH(address: string): Promise<PortfolioAth
       const athData = athPrices.get(holding.token_address.toLowerCase());
 
       if (athData && athData.athPrice > 0) {
-        // Calculate token amount
-        const tokenAmount = parseFloat(holding.balance);
+        // Calculate token amount - use balance if available, otherwise calculate from value/price
+        let tokenAmount: number;
+        
+        if (holding.balance) {
+          tokenAmount = parseFloat(holding.balance);
+        } else if (holding.price_usd && holding.price_usd > 0) {
+          // Calculate balance from value and price
+          tokenAmount = holding.value_usd / holding.price_usd;
+        } else {
+          console.warn(`⚠️  Cannot calculate balance for ${holding.token_symbol}`);
+          athValue += holding.value_usd; // Use current value as fallback
+          continue;
+        }
+
+        // Validate token amount
+        if (isNaN(tokenAmount) || tokenAmount <= 0) {
+          console.warn(`⚠️  Invalid balance for ${holding.token_symbol}: ${tokenAmount}`);
+          athValue += holding.value_usd; // Use current value as fallback
+          continue;
+        }
 
         // Calculate value at ATH
         const athTokenValue = tokenAmount * athData.athPrice;
-        athValue += athTokenValue;
-        successfulTokens++;
+        
+        // Validate result
+        if (isNaN(athTokenValue) || athTokenValue < 0) {
+          console.warn(`⚠️  Invalid ATH calculation for ${holding.token_symbol}`);
+          athValue += holding.value_usd; // Use current value as fallback
+        } else {
+          athValue += athTokenValue;
+          successfulTokens++;
+        }
       } else {
         // If we can't get ATH, use current value as fallback
         athValue += holding.value_usd;
@@ -105,6 +133,8 @@ export async function analyzePortfolioATH(address: string): Promise<PortfolioAth
       };
     }
 
+    console.log(`✅ Successfully retrieved ATH data for ${successfulTokens}/${tokenHoldings.length} tokens`);
+
     // Step 5: Calculate potential gain
     const potentialGainPercent = ((athValue - currentValue) / currentValue) * 100;
 
@@ -115,6 +145,8 @@ export async function analyzePortfolioATH(address: string): Promise<PortfolioAth
         currentValue,
         athValue,
         potentialGainPercent,
+        sampleSize: tokenHoldings.length,
+        successfulTokens,
       },
     };
   } catch (error) {

@@ -287,6 +287,8 @@ export interface EthBenchmarkFunFact {
     ethEquivalentValue: number;
     performancePercent: number;
     status: 'OUTPERFORMED' | 'UNDERPERFORMED';
+    sampleSize?: number; // Number of transactions analyzed
+    totalTransactions?: number; // Total transactions available
   };
   fallback?: string;
 }
@@ -298,6 +300,8 @@ export interface PortfolioAthFunFact {
     currentValue: number;
     athValue: number;
     potentialGainPercent: number;
+    sampleSize?: number; // Number of holdings analyzed
+    successfulTokens?: number; // Number of holdings with ATH data
   };
   fallback?: string;
 }
