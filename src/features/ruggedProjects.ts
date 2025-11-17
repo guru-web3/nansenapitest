@@ -6,6 +6,7 @@ const MIN_INVESTMENT = 100; // Minimum $100 investment to consider
 const LOSS_THRESHOLD = -90; // 90% loss threshold
 const MIN_AGE_DAYS = 30; // Minimum 30 days since last purchase
 const DEAD_PRICE_THRESHOLD = 0.00001; // Tokens with price < $0.00001 considered dead
+const SUPPORTED_CHAINS = ['ethereum', 'arbitrum', 'polygon', 'base', 'optimism']; // Multi-chain support
 
 /**
  * Detects if wallet holds tokens in rugged/scam projects
@@ -51,33 +52,42 @@ export async function analyzeRuggedProjects(address: string): Promise<RuggedProj
     const holdings = holdingsResponse.data;
     console.log(`  Found ${holdings.length} total holdings`);
 
-    // Step 2: Fetch transaction history (last 2 years)
+    // Step 2: Fetch transaction history (last 2 years) from multiple chains in parallel
     const historyStartDate = subYears(new Date(), 2);
     
-    // Note: Nansen API requires specific chain, can't use 'all' for transactions
-    // We'll fetch Ethereum first (most common), can expand to other chains later
-    const txHistoryResponse = await nansenService.getAllTransactions({
-      address,
-      chain: 'ethereum',
-      date: {
-        from: historyStartDate.toISOString(),
-        to: new Date().toISOString(),
-      },
-      hide_spam_token: true,
-      pagination: {
-        page: 1,
-        per_page: 100,
-      },
-      order_by: [
-        {
-          field: 'block_timestamp',
-          direction: 'DESC',
+    console.log(`  Fetching transactions from ${SUPPORTED_CHAINS.length} chains in parallel...`);
+    
+    // Fetch transactions from all supported chains in parallel
+    const txHistoryPromises = SUPPORTED_CHAINS.map(chain =>
+      nansenService.getAllTransactions({
+        address,
+        chain,
+        date: {
+          from: historyStartDate.toISOString(),
+          to: new Date().toISOString(),
         },
-      ],
-    });
+        hide_spam_token: true,
+        pagination: {
+          page: 1,
+          per_page: 100,
+        },
+        order_by: [
+          {
+            field: 'block_timestamp',
+            direction: 'DESC',
+          },
+        ],
+      }).catch(err => {
+        console.log(`  ⚠️  Failed to fetch ${chain} transactions:`, err.message);
+        return { data: [] };
+      })
+    );
 
-    const transactions = txHistoryResponse.data || [];
-    console.log(`  Found ${transactions.length} transactions`);
+    const txHistoryResults = await Promise.all(txHistoryPromises);
+    
+    // Combine all transactions from all chains
+    const transactions = txHistoryResults.flatMap(result => result.data || []);
+    console.log(`  Found ${transactions.length} transactions across ${SUPPORTED_CHAINS.length} chains`);
 
     // Step 3: Build purchase history map with token amounts
     interface PurchaseInfo {

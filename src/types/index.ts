@@ -313,11 +313,69 @@ export interface PortfolioAthFunFact {
   fallback?: string;
 }
 
+export interface WinRateFunFact {
+  type: 'win_rate';
+  success: boolean;
+  data?: {
+    winRate: number; // Percentage (0-100)
+    tradedTokens: number;
+    tradedTimes: number;
+    bestToken?: {
+      symbol: string;
+      roi: number; // ROI as percentage
+      pnl: number; // P&L in USD
+      chain: string;
+    };
+  };
+  fallback?: string;
+}
+
+export interface BiggestBagFunFact {
+  type: 'biggest_bag';
+  success: boolean;
+  data?: {
+    tokenSymbol: string;
+    tokenName: string;
+    valueUsd: number;
+    chain: string;
+    percentOfPortfolio: number;
+  };
+  fallback?: string;
+}
+
+export interface TokenDiversityFunFact {
+  type: 'token_diversity';
+  success: boolean;
+  data?: {
+    uniqueTokens: number;
+    totalValueUsd: number;
+    top3Concentration: number; // Percentage in top 3 tokens
+    diversityScore: 'HIGH' | 'MEDIUM' | 'LOW';
+  };
+  fallback?: string;
+}
+
+export interface MultiChainFunFact {
+  type: 'multi_chain';
+  success: boolean;
+  data?: {
+    chainCount: number;
+    chains: string[];
+    primaryChain: string;
+    primaryChainPercent: number; // % of activity on primary chain
+  };
+  fallback?: string;
+}
+
 export type FunFact = 
   | PnlFunFact 
   | LabelsFunFact 
   | SmartMoneyFunFact 
   | RuggedProjectsFunFact 
   | EthBenchmarkFunFact 
-  | PortfolioAthFunFact;
+  | PortfolioAthFunFact
+  | WinRateFunFact
+  | BiggestBagFunFact
+  | TokenDiversityFunFact
+  | MultiChainFunFact;
 

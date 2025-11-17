@@ -4,12 +4,19 @@ An interactive CLI tool that analyzes crypto wallet addresses using Nansen and C
 
 ## Features
 
+### Original Fun Facts
 1. **P&L (Profit & Loss)** - Analyzes realized profit/loss over the past year
 2. **Labels** - Identifies wallet tags (Whale, Active Trader, Staker, etc.)
 3. **Smart Money Traders** - Detects professional trader wallets
 4. **Rugged Projects** - Finds tokens in rugged/scam projects
 5. **ETH Benchmark** - Compares portfolio performance vs. holding ETH
 6. **Portfolio at ATH** - Calculates potential value if all holdings were at all-time highs
+
+### New Fun Facts (November 2025)
+7. **Win Rate Champion** - Shows trading win rate and best performing token
+8. **Biggest Bag** - Identifies your largest token holding and its portfolio percentage
+9. **Token Diversity** - Analyzes portfolio diversification with diversity score
+10. **Multi-Chain Explorer** - Tracks activity across multiple blockchain networks
 
 ## Setup
 

@@ -3,7 +3,7 @@ import { coinGeckoService } from '../services/coingecko.service';
 import { PortfolioAthFunFact } from '../types';
 
 const ATH_LOOKBACK_DAYS = 365; // Look back 1 year for ATH
-const TOP_HOLDINGS_COUNT = 10; // Top 10 holdings (~95% portfolio coverage)
+const TOP_HOLDINGS_COUNT = 20; // Top 20 holdings (~98% portfolio coverage)
 const MIN_VALUE_USD = 50; // Minimum $50 USD value to include
 
 /**

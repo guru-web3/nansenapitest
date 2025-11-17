@@ -10,35 +10,49 @@ const LABEL_PRIORITY = [
   'Smart Fund',                      // Priority 4
   'Token Millionaire',               // Priority 5
   'ETH Millionaire',                 // Priority 6
-  'New Token Specialist',            // Priority 7
-  'Memecoin Specialist',             // Priority 8
-  'Gaming Specialist',               // Priority 9
-  'AI Specialist',                   // Priority 10
-  'DEX Specialist',                  // Priority 11
-  'RWA Specialist',                  // Priority 12
-  'Smart NFT Trader',                // Priority 13
-  'Smart NFT Collector',             // Priority 14
-  'Smart NFT Minter',                // Priority 15
-  'Smart NFT Early Adopter',         // Priority 16
-  'Top Token Deployer',              // Priority 17
-  'Token Deployer',                  // Priority 18
-  'Emerging Smart Trader',           // Priority 19
-  'Arbitrum Specialist',             // Priority 20
-  'Base Specialist',                 // Priority 21
-  'Blast Specialist',                // Priority 22
-  'Optimism Specialist',             // Priority 23
-  'Polygon Specialist',              // Priority 24
-  'Linea Specialist',                // Priority 25
-  'Scroll Specialist',               // Priority 26
-  'Fantom Specialist',               // Priority 27
-  'Sei Specialist',                  // Priority 28
-  'ZKsync Specialist',               // Priority 29
-  'BSC Specialist',                  // Priority 30
-  'Avalanche Specialist',            // Priority 31
-  'Staker',                          // Priority 32
-  'OpenSea User',                    // Priority 33
-  'Blur Trader',                     // Priority 34
-  'Exit Liquidity',                  // Priority 35
+  'High Balance',                    // Priority 7
+  'New Token Specialist',            // Priority 8
+  'Memecoin Specialist',             // Priority 9
+  'Gaming Specialist',               // Priority 10
+  'AI Specialist',                   // Priority 11
+  'DEX Specialist',                  // Priority 12
+  'RWA Specialist',                  // Priority 13
+  'Smart NFT Trader',                // Priority 14
+  'Smart NFT Collector',             // Priority 15
+  'Smart NFT Minter',                // Priority 16
+  'Smart NFT Early Adopter',         // Priority 17
+  'Top Token Deployer',              // Priority 18
+  'Token Deployer',                  // Priority 19
+  'Deployer',                        // Priority 20
+  'Emerging Smart Trader',           // Priority 21
+  'High Activity',                   // Priority 22
+  'Arbitrum Specialist',             // Priority 23
+  'Base Specialist',                 // Priority 24
+  'Blast Specialist',                // Priority 25
+  'Optimism Specialist',             // Priority 26
+  'Polygon Specialist',              // Priority 27
+  'Linea Specialist',                // Priority 28
+  'Scroll Specialist',               // Priority 29
+  'Fantom Specialist',               // Priority 30
+  'Sei Specialist',                  // Priority 31
+  'ZKsync Specialist',               // Priority 32
+  'BSC Specialist',                  // Priority 33
+  'Avalanche Specialist',            // Priority 34
+  'Staker',                          // Priority 35
+  'Dex Trader',                      // Priority 36
+  'Medium Dex Trader',               // Priority 37
+  'Quickswap Liquidity Provider',    // Priority 38
+  'Sushiswap Liquidity Provider',    // Priority 39
+  'Passive Uniswap V3 LP',           // Priority 40
+  'Uniswap Liquidity Provider',      // Priority 41
+  'MultiSig Owner',                  // Priority 42
+  'Gnosis Safe Creator',             // Priority 43
+  'OpenSea User',                    // Priority 44
+  'Blur Trader',                     // Priority 45
+  '2k ARB Airdrop Recipient',        // Priority 46
+  '3k ARB Airdrop Recipient',        // Priority 47
+  'Sandwich Attack Victim',          // Priority 48
+  'Exit Liquidity',                  // Priority 49
 ];
 
 /**

@@ -194,3 +194,5 @@ export class CoinMarketCapService {
 // Export singleton instance
 export const coinMarketCapService = new CoinMarketCapService();
 
+
+

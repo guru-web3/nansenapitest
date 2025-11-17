@@ -5,8 +5,9 @@ import { PriceCacheService } from '../services/priceCache.service';
 import { EthBenchmarkFunFact } from '../types';
 
 const MIN_VOLUME_USD = 10; // Minimum $10 USD transaction volume
-const MONTHS_LOOKBACK = 6; // Look back 6 months
-const TOP_TRANSACTIONS = 20; // Sample top 20 transactions by volume (~92% coverage)
+const MONTHS_LOOKBACK = 12; // Look back 12 months (extended from 6 for better coverage)
+const TOP_TRANSACTIONS = 50; // Sample top 50 transactions by volume (~98% coverage)
+const SUPPORTED_CHAINS = ['ethereum', 'arbitrum', 'polygon', 'base', 'optimism']; // Multi-chain support
 
 /**
  * Compares wallet's token purchase performance vs. holding equivalent ETH instead
@@ -18,34 +19,46 @@ export async function analyzeEthBenchmark(address: string): Promise<EthBenchmark
     const now = new Date();
     const fromDate = subMonths(now, MONTHS_LOOKBACK);
 
-    // Step 1: Fetch all transactions in the past 6 months
-    const transactionsResponse = await nansenService.getAllTransactions({
-      address,
-      chain: 'ethereum',
-      date: {
-        from: fromDate.toISOString(),
-        to: now.toISOString(),
-      },
-      hide_spam_token: true,
-      filters: {
-        volume_usd: {
-          min: MIN_VOLUME_USD,
+    // Step 1: Fetch all transactions from multiple chains in parallel
+    console.log(`  Fetching transactions from ${SUPPORTED_CHAINS.length} chains in parallel...`);
+    
+    const transactionsPromises = SUPPORTED_CHAINS.map(chain =>
+      nansenService.getAllTransactions({
+        address,
+        chain,
+        date: {
+          from: fromDate.toISOString(),
+          to: now.toISOString(),
         },
-      },
-      pagination: {
-        page: 1,
-        per_page: 100,
-      },
-      order_by: [
-        {
-          field: 'block_timestamp',
-          direction: 'ASC',
+        hide_spam_token: true,
+        filters: {
+          volume_usd: {
+            min: MIN_VOLUME_USD,
+          },
         },
-      ],
-    });
+        pagination: {
+          page: 1,
+          per_page: 100,
+        },
+        order_by: [
+          {
+            field: 'block_timestamp',
+            direction: 'ASC',
+          },
+        ],
+      }).catch(err => {
+        console.log(`  ⚠️  Failed to fetch ${chain} transactions:`, err.message);
+        return { data: [] };
+      })
+    );
+
+    const transactionsResults = await Promise.all(transactionsPromises);
+    
+    // Combine all transactions from all chains
+    const transactions = transactionsResults.flatMap(result => result.data || []);
 
     // Check if we have any transactions
-    if (!transactionsResponse.data || transactionsResponse.data.length === 0) {
+    if (transactions.length === 0) {
       return {
         type: 'eth_benchmark',
         success: false,
@@ -53,7 +66,7 @@ export async function analyzeEthBenchmark(address: string): Promise<EthBenchmark
       };
     }
 
-    const transactions = transactionsResponse.data;
+    console.log(`  Found ${transactions.length} total transactions across ${SUPPORTED_CHAINS.length} chains`);
 
     // Step 2: Filter for buy transactions (tokens received, not sent)
     // A buy is when we receive tokens (tokens_received has items)
@@ -70,12 +83,12 @@ export async function analyzeEthBenchmark(address: string): Promise<EthBenchmark
     }
 
     // Step 2.5: Sample top transactions by volume for performance
-    // Sort by volume descending and take top 20
+    // Sort by volume descending and take top 50
     const topTransactions = buyTransactions
       .sort((a, b) => b.volume_usd - a.volume_usd)
       .slice(0, TOP_TRANSACTIONS);
 
-    console.log(`📊 Analyzing top ${topTransactions.length} transactions (out of ${buyTransactions.length} total)`);
+    console.log(`📊 Analyzing top ${topTransactions.length} transactions (out of ${buyTransactions.length} total across all chains)`);
 
     // Step 3: Calculate total USD spent on purchases using pre-computed prices
     let totalUsdSpent = 0;
